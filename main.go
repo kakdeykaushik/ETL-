@@ -4,16 +4,21 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 )
 
 func main() {
-	http.HandleFunc("/", handleEvents)
-	fmt.Println("server is starting")
+	http.Handle("/", recoverMiddleware(http.HandlerFunc(handleEvents)))
+	log.Println("server is starting")
 	fatalErr(http.ListenAndServe(":8000", nil), "Error while starting server")
 }
 
 func handleEvents(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
 	defer r.Body.Close()
 
 	data, err := io.ReadAll(r.Body)
@@ -31,9 +36,6 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 	event, err := concreteEvent(eventType, data)
 	panicErr(err, "Error while getting concrete event")
 
-	fmt.Println(event)
-
-	// todo
 	event.SaveToDB()
 
 }
