@@ -2,10 +2,9 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 )
 
-type SomeInterface interface {
+type Event interface {
 	SaveToDB()
 	UnmarshalJSON(data []byte) error
 }
@@ -17,14 +16,15 @@ type Base struct {
 	Epoch     int64
 }
 
-// todo
-func (Base) SaveToDB() {
-	fmt.Println("saved to db")
-}
-
 type LevelUp struct {
 	Base
 	Level int `json:"level"`
+}
+
+func (lup *LevelUp) SaveToDB() {
+	if err := Session.Query("INSERT INTO levelup_events(id, event_type, user_id, epoch, level) VALUES	(now(), ?, ?, ?, ?)", lup.EventType, lup.UserID, lup.Epoch, lup.Level).Exec(); err != nil {
+		panicErr(err, "Error while inserting to DB")
+	}
 }
 
 func (lup *LevelUp) UnmarshalJSON(data []byte) error {
@@ -44,7 +44,13 @@ func (lup *LevelUp) UnmarshalJSON(data []byte) error {
 type Purchase struct {
 	Base
 	ItemID string  `json:"item_id"`
-	Amount float64 `json:"amount"`
+	Amount float32 `json:"amount"`
+}
+
+func (p *Purchase) SaveToDB() {
+	if err := Session.Query("INSERT INTO purchase_events(id, event_type, user_id, epoch, item_id, amount) VALUES (now(), ?, ?, ?, ?, ?)", p.EventType, p.UserID, p.Epoch, p.ItemID, p.Amount).Exec(); err != nil {
+		panicErr(err, "Error while inserting to DB")
+	}
 }
 
 func (p *Purchase) UnmarshalJSON(data []byte) error {
@@ -55,7 +61,7 @@ func (p *Purchase) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	purchase.Amount = round(purchase.Amount, 2)
+	purchase.Amount = float32(round(float64(purchase.Amount), 2))
 	purchase.Epoch = tsToEpoch(purchase.Timestamp)
 	*p = Purchase(purchase)
 	return nil
@@ -64,6 +70,12 @@ func (p *Purchase) UnmarshalJSON(data []byte) error {
 type Login struct {
 	Base
 	DeviceType string `json:"device_type"`
+}
+
+func (l *Login) SaveToDB() {
+	if err := Session.Query("INSERT INTO login_events(id, event_type, user_id, epoch, device) VALUES (now(), ?, ?, ?, ?)", l.EventType, l.UserID, l.Epoch, l.DeviceType).Exec(); err != nil {
+		panicErr(err, "Error while inserting to DB")
+	}
 }
 
 func (l *Login) UnmarshalJSON(data []byte) error {

@@ -40,8 +40,8 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func concreteEvent(event_type string, data []byte) (SomeInterface, error) {
-	if event_type == "login" {
+func concreteEvent(eventType string, data []byte) (Event, error) {
+	if eventType == "login" {
 		var login Login
 		err := json.Unmarshal(data, &login)
 		if err != nil {
@@ -50,7 +50,7 @@ func concreteEvent(event_type string, data []byte) (SomeInterface, error) {
 		return &login, nil
 	}
 
-	if event_type == "purchase" {
+	if eventType == "purchase" {
 		var purchase Purchase
 		err := json.Unmarshal(data, &purchase)
 		if err != nil {
@@ -59,7 +59,7 @@ func concreteEvent(event_type string, data []byte) (SomeInterface, error) {
 		return &purchase, nil
 	}
 
-	if event_type == "level_up" {
+	if eventType == "level_up" {
 		var levelUp LevelUp
 		err := json.Unmarshal(data, &levelUp)
 		if err != nil {
@@ -68,5 +68,5 @@ func concreteEvent(event_type string, data []byte) (SomeInterface, error) {
 		return &levelUp, nil
 	}
 
-	return nil, fmt.Errorf("invalid event type: %s", event_type)
+	return nil, fmt.Errorf("invalid event type: %s", eventType)
 }
