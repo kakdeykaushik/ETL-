@@ -1,11 +1,11 @@
-package main
+package middleware
 
 import (
 	"log"
 	"net/http"
 )
 
-func recoverMiddleware(next http.Handler) http.Handler {
+func RecoverMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if r := recover(); r != nil {

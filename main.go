@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"etl/middleware"
+	"etl/model"
+	"etl/utils"
 	"fmt"
 	"io"
 	"log"
@@ -9,9 +12,9 @@ import (
 )
 
 func main() {
-	http.Handle("/", recoverMiddleware(http.HandlerFunc(handleEvents)))
+	http.Handle("/", middleware.RecoverMiddleware(http.HandlerFunc(handleEvents)))
 	log.Println("server is starting")
-	fatalErr(http.ListenAndServe(":8000", nil), "Error while starting server")
+	utils.FatalErr(http.ListenAndServe(":8000", nil), "Error while starting server")
 }
 
 func handleEvents(w http.ResponseWriter, r *http.Request) {
@@ -22,27 +25,27 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	data, err := io.ReadAll(r.Body)
-	panicErr(err, "Error reading request body")
+	utils.PanicErr(err, "Error reading request body")
 
 	m := map[string]any{}
 	err = json.Unmarshal(data, &m)
-	panicErr(err, "Error while unmarshaling request body []byte")
+	utils.PanicErr(err, "Error while unmarshaling request body []byte")
 
 	eventType, ok := m["event_type"].(string)
 	if !ok {
-		panicErr(fmt.Errorf("invalid event_type"), "Invalid event_type received from request body")
+		utils.PanicErr(fmt.Errorf("invalid event_type"), "Invalid event_type received from request body")
 		// todo this should be returned to caller with 4xx error
 	}
 	event, err := concreteEvent(eventType, data)
-	panicErr(err, "Error while getting concrete event")
+	utils.PanicErr(err, "Error while getting concrete event")
 
 	event.SaveToDB()
 
 }
 
-func concreteEvent(eventType string, data []byte) (Event, error) {
+func concreteEvent(eventType string, data []byte) (model.Event, error) {
 	if eventType == "login" {
-		var login Login
+		var login model.Login
 		err := json.Unmarshal(data, &login)
 		if err != nil {
 			return nil, err
@@ -51,7 +54,7 @@ func concreteEvent(eventType string, data []byte) (Event, error) {
 	}
 
 	if eventType == "purchase" {
-		var purchase Purchase
+		var purchase model.Purchase
 		err := json.Unmarshal(data, &purchase)
 		if err != nil {
 			return nil, err
@@ -60,7 +63,7 @@ func concreteEvent(eventType string, data []byte) (Event, error) {
 	}
 
 	if eventType == "level_up" {
-		var levelUp LevelUp
+		var levelUp model.LevelUp
 		err := json.Unmarshal(data, &levelUp)
 		if err != nil {
 			return nil, err
