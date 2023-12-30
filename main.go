@@ -20,6 +20,7 @@ func main() {
 func handleEvents(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
 		w.WriteHeader(http.StatusMethodNotAllowed)
+		return
 	}
 
 	defer r.Body.Close()
@@ -39,8 +40,13 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 	event, err := concreteEvent(eventType, data)
 	utils.PanicErr(err, "Error while getting concrete event")
 
-	event.SaveToDB()
+	err = event.SaveToDB()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
 
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Message ingested successfully"))
 }
 
 func concreteEvent(eventType string, data []byte) (model.Event, error) {

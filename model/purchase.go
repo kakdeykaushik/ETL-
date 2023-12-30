@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"etl/db"
 	"etl/utils"
+	"fmt"
 )
 
 type Purchase struct {
@@ -12,10 +13,11 @@ type Purchase struct {
 	Amount float32 `json:"amount"`
 }
 
-func (p *Purchase) SaveToDB() {
+func (p *Purchase) SaveToDB() error {
 	if err := db.GetSession().Query("INSERT INTO purchase_events(id, event_type, user_id, epoch, item_id, amount) VALUES (now(), ?, ?, ?, ?, ?)", p.EventType, p.UserID, p.Epoch, p.ItemID, p.Amount).Exec(); err != nil {
-		utils.PanicErr(err, "Error while inserting to DB")
+		return fmt.Errorf("error while inserting to DB - %w", err)
 	}
+	return nil
 }
 
 func (p *Purchase) UnmarshalJSON(data []byte) error {

@@ -1,7 +1,7 @@
 package model
 
 type Event interface {
-	SaveToDB()
+	SaveToDB() error
 	UnmarshalJSON(data []byte) error
 }
 
