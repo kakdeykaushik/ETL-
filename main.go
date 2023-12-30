@@ -12,6 +12,11 @@ import (
 )
 
 func main() {
+	http.HandleFunc("/up", func(w http.ResponseWriter, r *http.Request) {
+		log.Println("up")
+		w.Write([]byte("ok"))
+	})
+
 	http.Handle("/", middleware.RecoverMiddleware(http.HandlerFunc(handleEvents)))
 	log.Println("server is starting")
 	utils.FatalErr(http.ListenAndServe(":8000", nil), "Error while starting server")
