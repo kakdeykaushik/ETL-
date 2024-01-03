@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"etl/db"
 	"etl/utils"
 	"fmt"
@@ -20,16 +19,13 @@ func (p *Purchase) SaveToDB() error {
 	return nil
 }
 
-func (p *Purchase) UnmarshalJSON(data []byte) error {
-	type alias Purchase // alias is important else it will go in inf loop
-	var purchase alias
-
-	if err := json.Unmarshal(data, &purchase); err != nil {
+func (p *Purchase) Transform() error {
+	epoch, err := utils.TsToEpoch(p.Timestamp)
+	if err != nil {
 		return err
 	}
+	p.Epoch = epoch
+	p.Amount = float32(utils.Round(float64(p.Amount), 2))
 
-	purchase.Amount = float32(utils.Round(float64(purchase.Amount), 2))
-	purchase.Epoch = utils.TsToEpoch(purchase.Timestamp)
-	*p = Purchase(purchase)
 	return nil
 }

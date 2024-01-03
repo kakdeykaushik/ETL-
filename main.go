@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"etl/interfaces"
 	"etl/middleware"
 	"etl/model"
 	"etl/utils"
@@ -45,6 +46,11 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 	event, err := concreteEvent(eventType, data)
 	utils.PanicErr(err, "Error while getting concrete event")
 
+	err = event.Transform()
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+	}
+
 	err = event.SaveToDB()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -54,7 +60,7 @@ func handleEvents(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Message ingested successfully"))
 }
 
-func concreteEvent(eventType string, data []byte) (model.Event, error) {
+func concreteEvent(eventType string, data []byte) (interfaces.Event, error) {
 	if eventType == "login" {
 		var login model.Login
 		err := json.Unmarshal(data, &login)

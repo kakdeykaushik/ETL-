@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"etl/db"
 	"etl/utils"
 	"fmt"
@@ -19,15 +18,11 @@ func (l *Login) SaveToDB() error {
 	return nil
 }
 
-func (l *Login) UnmarshalJSON(data []byte) error {
-	type alias Login // alias is important else it will go in inf loop
-	var login alias
-
-	if err := json.Unmarshal(data, &login); err != nil {
+func (l *Login) Transform() error {
+	epoch, err := utils.TsToEpoch(l.Timestamp)
+	if err != nil {
 		return err
 	}
-
-	login.Epoch = utils.TsToEpoch(login.Timestamp)
-	*l = Login(login)
+	l.Epoch = epoch
 	return nil
 }

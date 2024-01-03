@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"log"
 	"math"
 	"time"
@@ -18,11 +19,13 @@ func PanicErr(err error, msg string) {
 	}
 }
 
-func TsToEpoch(dt string) int64 {
-	layout := "2006-01-02T15:04:05" // prof will shout
+func TsToEpoch(dt string) (int64, error) {
+	layout := "2006-01-02T15:04:05Z" // prof will shout
 	parsedTime, err := time.Parse(layout, dt)
-	PanicErr(err, "Error parsing time:")
-	return parsedTime.UnixMilli()
+	if err != nil {
+		return 0, fmt.Errorf("error parsing time: %w", err)
+	}
+	return parsedTime.UnixMilli(), nil
 }
 
 func Round(value float64, precision int) float64 {

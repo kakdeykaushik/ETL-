@@ -1,7 +1,6 @@
 package model
 
 import (
-	"encoding/json"
 	"etl/db"
 	"etl/utils"
 	"fmt"
@@ -19,16 +18,11 @@ func (lup *LevelUp) SaveToDB() error {
 	return nil
 }
 
-func (lup *LevelUp) UnmarshalJSON(data []byte) error {
-	type alias LevelUp // alias is important else it will go in inf loop
-	var levelUp alias
-
-	if err := json.Unmarshal(data, &levelUp); err != nil {
+func (lup *LevelUp) Transform() error {
+	epoch, err := utils.TsToEpoch(lup.Timestamp)
+	if err != nil {
 		return err
 	}
-
-	levelUp.Epoch = utils.TsToEpoch(levelUp.Timestamp)
-	*lup = LevelUp(levelUp)
+	lup.Epoch = epoch
 	return nil
-
 }
